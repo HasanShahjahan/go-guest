@@ -93,6 +93,20 @@ func TestDeleteGuest(t *testing.T) {
 	}
 }
 
+func TestArrivedGuests(t *testing.T) {
+	a.Initialize(os.Getenv("TEST_DB_DRIVER"), os.Getenv("TEST_DB_USERNAME"), os.Getenv("TEST_DB_PASSWORD"), os.Getenv("TEST_DB_NAME"))
+	clearTable()
+	ensureTableExists()
+
+	req, _ := http.NewRequest("GET", "/guests", nil)
+	response := executeRequest(req)
+
+	checkResponseCode(t, http.StatusOK, response.Code)
+	if body := response.Body.String(); body != "{}" {
+		t.Errorf("Expected an empty object of array. Got %s", body)
+	}
+}
+
 func addGuest() {
 	if _, err := a.DB.Exec(insertGuest); err != nil {
 		log.Fatal(err)
