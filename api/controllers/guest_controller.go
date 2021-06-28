@@ -16,6 +16,30 @@ const (
 	Archived = "archived"
 )
 
+type guest struct {
+	ID                 int       `json:"id"`
+	Table              int       `json:"table"`
+	Name               string    `json:"name"`
+	AccompanyingGuests int       `json:"accompanying_guests"`
+	Status             string    `json:"status"`
+	ArrivalTime        time.Time `json:"time_arrived"`
+}
+
+type accommodation struct {
+	ID            int `json:"id"`
+	TableNo       int `json:"table_no"`
+	AvailableSeat int `json:"available_seat"`
+	BookedSeat    int `json:"booked_seat"`
+}
+
+type seats struct {
+	SeatsEmpty int `json:"seats_empty"`
+}
+
+type guestlist struct {
+	guests []guest
+}
+
 func (server *Server) GetGuestLists(w http.ResponseWriter, r *http.Request) {
 	guestLists, err := getGuestLists(server.DB)
 	if err != nil {
@@ -196,30 +220,6 @@ func (server *Server) SeatsEmpty(w http.ResponseWriter, r *http.Request) {
 	responses.RespondWithJSON(w, http.StatusOK, s)
 }
 
-type guest struct {
-	ID                 int       `json:"id"`
-	Table              int       `json:"table"`
-	Name               string    `json:"name"`
-	AccompanyingGuests int       `json:"accompanying_guests"`
-	Status             string    `json:"status"`
-	ArrivalTime        time.Time `json:"time_arrived"`
-}
-
-type accommodation struct {
-	ID            int `json:"id"`
-	TableNo       int `json:"table_no"`
-	AvailableSeat int `json:"available_seat"`
-	BookedSeat    int `json:"booked_seat"`
-}
-
-type seats struct {
-	SeatsEmpty int `json:"seats_empty"`
-}
-
-type guestlist struct {
-	guests []guest
-}
-
 func getGuestLists(db *sql.DB) (*guestlist, error) {
 	sqlStatement := `SELECT g.name ,a.table_no ,g.accompanying_guests 
                      FROM guest g 
@@ -262,18 +262,18 @@ func (a *guest) getGuests(db *sql.DB) (*guestlist, error) {
 	return &guestlist{guests: guests}, nil
 }
 
-func (g *guest) getGuest(db *sql.DB) error {
-	return db.QueryRow("SELECT g.id , g.name , g.table_id, g.accompanying_guests, g.status FROM guest g WHERE g.name = ?", g.Name).Scan(&g.ID, &g.Name, &g.Table, &g.AccompanyingGuests, &g.Status)
+func (a *guest) getGuest(db *sql.DB) error {
+	return db.QueryRow("SELECT g.id , g.name , g.table_id, g.accompanying_guests, g.status FROM guest g WHERE g.name = ?", a.Name).Scan(&a.ID, &a.Name, &a.Table, &a.AccompanyingGuests, &a.Status)
 }
 
-func (p *guest) createGuest(db *sql.DB, bookedSeat int) error {
+func (a *guest) createGuest(db *sql.DB, bookedSeat int) error {
 	ins, err := db.Prepare("INSERT INTO guest(name, table_id, accompanying_guests, status) VALUES(?, ?, ?, ?);")
 	if err != nil {
 		panic(err)
 	}
 	defer ins.Close()
 
-	res, err := ins.Exec(p.Name, p.Table, p.AccompanyingGuests, p.Status)
+	res, err := ins.Exec(a.Name, a.Table, a.AccompanyingGuests, a.Status)
 	rowsAffect, _ := res.RowsAffected()
 	if err != nil || rowsAffect != 1 {
 		fmt.Printf("Error inserting data, please check all fields.")
@@ -287,7 +287,7 @@ func (p *guest) createGuest(db *sql.DB, bookedSeat int) error {
 	defer update.Close()
 
 	// Total = Previous booked seat + newly accompanying guest + guest itself.
-	updaters, err := update.Exec(bookedSeat, p.Table)
+	updaters, err := update.Exec(bookedSeat, a.Table)
 	rowsAffected, _ := updaters.RowsAffected()
 	if err != nil || rowsAffected == 0 {
 		fmt.Printf("Error during update accommodation data.")
@@ -296,14 +296,14 @@ func (p *guest) createGuest(db *sql.DB, bookedSeat int) error {
 	return nil
 }
 
-func (p *guest) updateGuest(db *sql.DB, bookedSeat int) error {
+func (a *guest) updateGuest(db *sql.DB, bookedSeat int) error {
 	update, err := db.Prepare(" UPDATE guest SET accompanying_guests=?, status=?, arrival_time=? WHERE name=?")
 	if err != nil {
 		panic(err)
 	}
 	defer update.Close()
 
-	res, err := update.Exec(p.AccompanyingGuests, p.Status, p.ArrivalTime, p.Name)
+	res, err := update.Exec(a.AccompanyingGuests, a.Status, a.ArrivalTime, a.Name)
 	rowsAffect, _ := res.RowsAffected()
 	if err != nil || rowsAffect != 1 {
 		fmt.Printf("Error updating data, please check all fields.")
@@ -316,7 +316,7 @@ func (p *guest) updateGuest(db *sql.DB, bookedSeat int) error {
 	}
 	defer updateAcc.Close()
 
-	updaters, err := updateAcc.Exec(bookedSeat, p.Table)
+	updaters, err := updateAcc.Exec(bookedSeat, a.Table)
 	rowsAffected, _ := updaters.RowsAffected()
 	if err != nil || rowsAffected == 0 {
 		fmt.Printf("Error during update accommodation data.")
@@ -325,14 +325,14 @@ func (p *guest) updateGuest(db *sql.DB, bookedSeat int) error {
 	return nil
 }
 
-func (g *guest) deleteGuest(db *sql.DB, bookedSeat int) error {
+func (a *guest) deleteGuest(db *sql.DB, bookedSeat int) error {
 	update, err := db.Prepare(" UPDATE guest SET status=? WHERE name=?")
 	if err != nil {
 		panic(err)
 	}
 	defer update.Close()
 
-	res, err := update.Exec(g.Status, g.Name)
+	res, err := update.Exec(a.Status, a.Name)
 	rowsAffect, _ := res.RowsAffected()
 	if err != nil || rowsAffect != 1 {
 		fmt.Printf("Error deleting data, please check all fields.")
@@ -345,7 +345,7 @@ func (g *guest) deleteGuest(db *sql.DB, bookedSeat int) error {
 	}
 	defer updateAcc.Close()
 
-	updaters, err := updateAcc.Exec(bookedSeat, g.Table)
+	updaters, err := updateAcc.Exec(bookedSeat, a.Table)
 	rowsAffected, _ := updaters.RowsAffected()
 	if err != nil || rowsAffected == 0 {
 		fmt.Printf("Error during update accommodation data.")
