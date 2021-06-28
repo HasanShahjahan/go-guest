@@ -1,6 +1,8 @@
 package tests
 
 import (
+	"bytes"
+	"encoding/json"
 	"github.com/HasanShahjahan/go-guest/api/controllers"
 	"log"
 	"net/http"
@@ -22,6 +24,27 @@ func TestEmptyTable(t *testing.T) {
 	checkResponseCode(t, http.StatusOK, response.Code)
 	if body := response.Body.String(); body != "{}" {
 		t.Errorf("Expected an empty object of array. Got %s", body)
+	}
+}
+
+func TestCreateGuest(t *testing.T) {
+	a.Initialize(os.Getenv("TEST_DB_DRIVER"), os.Getenv("TEST_DB_USERNAME"), os.Getenv("TEST_DB_PASSWORD"), os.Getenv("TEST_DB_NAME"))
+	clearTable()
+	ensureTableExists()
+	setupSeedData()
+
+	var jsonStr = []byte(`{"table": 1001,"accompanying_guests": 3}`)
+	req, _ := http.NewRequest("POST", "/guest_list/Hasan", bytes.NewBuffer(jsonStr))
+	req.Header.Set("Content-Type", "application/json")
+
+	response := executeRequest(req)
+	checkResponseCode(t, http.StatusCreated, response.Code)
+
+	var m map[string]interface{}
+	json.Unmarshal(response.Body.Bytes(), &m)
+
+	if m["name"] != "Hasan" {
+		t.Errorf("Expected guest name to be 'Hasan'. Got '%v'", m["name"])
 	}
 }
 
