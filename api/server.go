@@ -2,12 +2,13 @@ package api
 
 import (
 	"fmt"
+	"log"
+	"os"
+
 	"github.com/HasanShahjahan/go-guest/api/controllers"
 	"github.com/HasanShahjahan/go-guest/api/seed"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/joho/godotenv"
-	"log"
-	"os"
 )
 
 var server = controllers.Server{}

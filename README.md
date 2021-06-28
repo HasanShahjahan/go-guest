@@ -6,10 +6,10 @@ This is the repository houses of monolithic flat architecture that make up GoGro
 
 * [Go](https://golang.org/dl/): `brew install go`
 * Install docker
-* Setup `go-ground` folder in your home directory: `/Users/<user_id>/go-ground`. So, `go env` should show `GOPATH="/Users/<user_id>/go-ground"`
-* Clone `HasanShahjahan/go-ground` repository in `/Users/<user_id>/`: `git clone <repo_url>`
-* After cloning, the `go.mod` file should be found in this directory `/Users/<user_id>/go-ground/go.mod`
-* Add `/Users/<user_id>/go-ground/bin` in environment variable `PATH` if it is not already there.
+* Setup `go-guest` folder in your home directory: `/Users/<user_id>/go-guest`. So, `go env` should show `GOPATH="/Users/<user_id>/go-guest"`
+* Clone `HasanShahjahan/go-guest` repository in `/Users/<user_id>/`: `git clone <repo_url>`
+* After cloning, the `go.mod` file should be found in this directory `/Users/<user_id>/go-guest/go.mod`
+* Add `/Users/<user_id>/go-guest/bin` in environment variable `PATH` if it is not already there.
 
 ## Running the App
 
