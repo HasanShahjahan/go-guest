@@ -71,6 +71,28 @@ func TestUpdateGuest(t *testing.T) {
 	}
 }
 
+func TestDeleteGuest(t *testing.T) {
+	a.Initialize(os.Getenv("TEST_DB_DRIVER"), os.Getenv("TEST_DB_USERNAME"), os.Getenv("TEST_DB_PASSWORD"), os.Getenv("TEST_DB_NAME"))
+	clearTable()
+	ensureTableExists()
+	setupSeedData()
+	addGuest()
+	updateAccommodation()
+
+	req, _ := http.NewRequest("DELETE", "/guests/Hasan", nil)
+	req.Header.Set("Content-Type", "application/json")
+
+	response := executeRequest(req)
+	checkResponseCode(t, http.StatusOK, response.Code)
+
+	var m map[string]interface{}
+	json.Unmarshal(response.Body.Bytes(), &m)
+
+	if m["result"] != "success" {
+		t.Errorf("Expected result to be 'success'. Got '%v'", m["result"])
+	}
+}
+
 func addGuest() {
 	if _, err := a.DB.Exec(insertGuest); err != nil {
 		log.Fatal(err)
