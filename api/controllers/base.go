@@ -22,7 +22,7 @@ func (server *Server) Initialize(driver, user, password, dbname string) {
 		fmt.Printf("Cannot connect to %s database", driver)
 		log.Fatal("This is the error:", err)
 	} else {
-		fmt.Printf("We are connected to the %s database", "mysql")
+		fmt.Printf("We are connected to the %s database\n", "mysql")
 	}
 
 	server.Router = mux.NewRouter()
