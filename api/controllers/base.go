@@ -14,13 +14,14 @@ type Server struct {
 	DB     *sql.DB
 }
 
-func (server *Server) Initialize(user, password, dbname string) {
+func (server *Server) Initialize(driver, user, password, dbname string) {
 	var err error
-	server.DB, err = sql.Open("mysql", user+":"+password+"@/"+dbname)
+	//server.DB, err = sql.Open(driver, user+":"+password+"@/"+dbname)
+	server.DB, err = sql.Open("mysql", "root:password@/e-guest")
 	if err != nil {
-		fmt.Printf("Cannot connect to %s database", "mysql")
+		fmt.Printf("Cannot connect to %s database", driver)
 		log.Fatal("This is the error:", err)
-	}else {
+	} else {
 		fmt.Printf("We are connected to the %s database", "mysql")
 	}
 
