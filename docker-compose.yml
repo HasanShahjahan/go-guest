@@ -1,0 +1,25 @@
+version: '3'
+services:
+
+go-guest-mysql:
+     image: mysql:5.7
+     container_name: full_db_mysql
+     ports:
+       - 3306:3306
+     environment:
+       - MYSQL_USER=${DB_USER}
+       - MYSQL_PASSWORD=${DB_PASSWORD}
+       - MYSQL_DATABASE=${DB_NAME}
+       - MYSQL_ROOT_PASSWORD=${DB_PASSWORD}
+     volumes:
+       - database_mysql:/var/lib/mysql
+     networks:
+       - goguest
+
+volumes:
+  api:
+  database_mysql:                   # Uncomment this when using mysql.
+
+networks:
+  goguest:
+    driver: bridges
