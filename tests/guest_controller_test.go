@@ -48,6 +48,41 @@ func TestCreateGuest(t *testing.T) {
 	}
 }
 
+func TestUpdateGuest(t *testing.T) {
+	a.Initialize(os.Getenv("TEST_DB_DRIVER"), os.Getenv("TEST_DB_USERNAME"), os.Getenv("TEST_DB_PASSWORD"), os.Getenv("TEST_DB_NAME"))
+	clearTable()
+	ensureTableExists()
+	setupSeedData()
+	addGuest()
+	updateAccommodation()
+
+	var jsonStr = []byte(`{"accompanying_guests": 6}`)
+	req, _ := http.NewRequest("PUT", "/guests/Hasan", bytes.NewBuffer(jsonStr))
+	req.Header.Set("Content-Type", "application/json")
+
+	response := executeRequest(req)
+	checkResponseCode(t, http.StatusOK, response.Code)
+
+	var m map[string]interface{}
+	json.Unmarshal(response.Body.Bytes(), &m)
+
+	if m["name"] != "Hasan" {
+		t.Errorf("Expected guest name to be 'Hasan'. Got '%v'", m["name"])
+	}
+}
+
+func addGuest() {
+	if _, err := a.DB.Exec(insertGuest); err != nil {
+		log.Fatal(err)
+	}
+}
+
+func updateAccommodation() {
+	if _, err := a.DB.Exec(updateAcc); err != nil {
+		log.Fatal(err)
+	}
+}
+
 func ensureTableExists() {
 	if _, err := a.DB.Exec(accommodationTableCreationQuery); err != nil {
 		log.Fatal(err)
