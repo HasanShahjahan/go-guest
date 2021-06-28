@@ -107,6 +107,26 @@ func TestArrivedGuests(t *testing.T) {
 	}
 }
 
+func TestSeatsEmpty(t *testing.T) {
+	a.Initialize(os.Getenv("TEST_DB_DRIVER"), os.Getenv("TEST_DB_USERNAME"), os.Getenv("TEST_DB_PASSWORD"), os.Getenv("TEST_DB_NAME"))
+	clearTable()
+	ensureTableExists()
+	setupSeedData()
+
+	req, _ := http.NewRequest("GET", "/seats_empty", nil)
+	req.Header.Set("Content-Type", "application/json")
+
+	response := executeRequest(req)
+	checkResponseCode(t, http.StatusOK, response.Code)
+
+	var m map[string]int
+	json.Unmarshal(response.Body.Bytes(), &m)
+
+	if m["seats_empty"] != 65 {
+		t.Errorf("Expected empty seats count to be '65'. Got '%v'", m["seats_empty"])
+	}
+}
+
 func addGuest() {
 	if _, err := a.DB.Exec(insertGuest); err != nil {
 		log.Fatal(err)
