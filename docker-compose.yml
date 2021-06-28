@@ -1,11 +1,12 @@
 version: '3'
 services:
-  go-guest:
+  goguest-mysql:
     image: mysql:5.7
     container_name: full_db_mysql
-    ports:
+    ports: 
       - 3306:3306
-    environment:
+    environment: 
+      - MYSQL_ROOT_HOST=${DB_HOST} 
       - MYSQL_USER=${DB_USER}
       - MYSQL_PASSWORD=${DB_PASSWORD}
       - MYSQL_DATABASE=${DB_NAME}
@@ -13,7 +14,7 @@ services:
     volumes:
       - database_mysql:/var/lib/mysql
     networks:
-      - go-guest
+      - goguest
 
 volumes:
   api:
@@ -21,6 +22,5 @@ volumes:
       
 # Networks to be created to facilitate communication between containers
 networks:
-  go-guest:
+  goguest:
     driver: bridge
-      
