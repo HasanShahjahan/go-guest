@@ -1,7 +1,9 @@
 package main
 
-import "github.com/HasanShahjahan/go-guest/api"
+import (
+	"github.com/HasanShahjahan/go-guest/api"
+)
 
-func main()  {
+func main() {
 	api.Run()
 }
