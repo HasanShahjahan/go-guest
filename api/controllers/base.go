@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	logTag = "base"
+	logTag = "[Base]"
 )
 
 type Server struct {

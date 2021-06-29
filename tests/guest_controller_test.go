@@ -166,12 +166,6 @@ func ensureTableExists() {
 	}
 }
 
-func createDatabase() {
-	if _, err := a.DB.Exec("CREATE DATABASE IF NOT EXISTS guests"); err != nil {
-		log.Fatal(err)
-	}
-}
-
 func clearTable() {
 	if _, err := a.DB.Exec("DROP TABLE IF EXISTS guests.guest"); err != nil {
 		log.Fatal(err)

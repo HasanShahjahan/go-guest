@@ -2,47 +2,60 @@ package seed
 
 import (
 	"database/sql"
-	"fmt"
+	logging "github.com/HasanShahjahan/go-guest/api/utils"
 	"log"
 )
 
+const (
+	logTag = "[Seed]"
+)
+
 func Load(db *sql.DB) {
-	fmt.Println("Loading seed data...")
+	logging.Info(logTag, "Loading seed data...")
 	createDatabase(db)
 	clearTable(db)
 	ensureTableExists(db)
 	setupSeedData(db)
-	fmt.Println("Loading seed data is successful.")
+
 }
 
 func createDatabase(db *sql.DB) {
 	if _, err := db.Exec("CREATE DATABASE IF NOT EXISTS guests;"); err != nil {
-		log.Fatal(err)
+		logging.Error(logTag, "Error during database creation", err)
 	}
+	logging.Info(logTag, "Database creation is done.")
 }
 func clearTable(db *sql.DB) {
 	if _, err := db.Exec("DROP TABLE IF EXISTS guests.guest"); err != nil {
-		log.Fatal(err)
+		logging.Error(logTag, "Error during Guest table drop", err)
 	}
+	logging.Info(logTag, "Guest table is dropped.")
+
 	if _, err := db.Exec("DROP TABLE IF EXISTS guests.accommodation"); err != nil {
-		log.Fatal(err)
+		logging.Error(logTag, "Error during Accomodation table drop", err)
 	}
+	logging.Info(logTag, "Accommodation table is dropped. ")
 }
 
 func ensureTableExists(db *sql.DB) {
 	if _, err := db.Exec(accommodationTableCreationQuery); err != nil {
 		log.Fatal(err)
+		logging.Error(logTag, "Error during Accomodation table creation", err)
 	}
+	logging.Info(logTag, "Guest table is created.")
 
 	if _, err := db.Exec(guestTableCreationQuery); err != nil {
 		log.Fatal(err)
+		logging.Error(logTag, "Error during Accomodation table creation", err)
 	}
+	logging.Info(logTag, "Guest table is created.")
 }
 
 func setupSeedData(db *sql.DB) {
 	if _, err := db.Exec(insertAccommodation); err != nil {
 		log.Fatal(err)
 	}
+	logging.Info(logTag, "Seeding data is successful.")
 }
 
 const guestTableCreationQuery = `CREATE TABLE IF NOT EXISTS guests.guest
