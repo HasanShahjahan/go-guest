@@ -17,7 +17,7 @@ type Server struct {
 func (server *Server) Initialize(driver, user, password, dbname string) {
 	var err error
 	//server.DB, err = sql.Open(driver, user+":"+password+"@/"+dbname)
-	server.DB, err = sql.Open("mysql", "root:password@/e-guest")
+	server.DB, err = sql.Open("mysql", "root:password@/guests")
 	if err != nil {
 		fmt.Printf("Cannot connect to %s database", driver)
 		log.Fatal("This is the error:", err)

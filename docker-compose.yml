@@ -2,12 +2,11 @@ version: '3'
 services:
   goguest-mysql:
     image: mysql:5.7
-    container_name: full_db_mysql
+    container_name: go_ground_mysql
     ports: 
       - 3306:3306
-    environment: 
-      - MYSQL_ROOT_HOST=${DB_HOST} 
-      - MYSQL_USER=${DB_USER}
+    environment:
+      - MYSQL_USER=${DB_USERNAME}
       - MYSQL_PASSWORD=${DB_PASSWORD}
       - MYSQL_DATABASE=${DB_NAME}
       - MYSQL_ROOT_PASSWORD=${DB_PASSWORD}
