@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	logTag = "server"
+	logTag = "[Server]"
 )
 
 var server = controllers.Server{}
