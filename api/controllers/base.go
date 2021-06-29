@@ -2,11 +2,15 @@ package controllers
 
 import (
 	"database/sql"
-	"fmt"
+	"github.com/HasanShahjahan/go-guest/api/utils"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/gorilla/mux"
 	"log"
 	"net/http"
+)
+
+const (
+	logTag = "base"
 )
 
 type Server struct {
@@ -16,13 +20,17 @@ type Server struct {
 
 func (server *Server) Initialize(driver, user, password, dbname string) {
 	var err error
-	//server.DB, err = sql.Open(driver, user+":"+password+"@/"+dbname)
-	server.DB, err = sql.Open("mysql", "root:password@/guests")
-	if err != nil {
-		fmt.Printf("Cannot connect to %s database", driver)
-		log.Fatal("This is the error:", err)
+	var dataSourceName string
+	if user == "" && password == "" && dbname == "" {
+		dataSourceName = "root:password@/guests"
 	} else {
-		fmt.Printf("We are connected to the %s database\n", "mysql")
+		dataSourceName = user + ":" + password + "@/" + dbname
+	}
+	server.DB, err = sql.Open("mysql", dataSourceName)
+	if err != nil {
+		logging.Warn(logTag, "Cannot connect to ", err)
+	} else {
+		logging.Info(logTag, "We are connected to the %s database \n", driver)
 	}
 
 	server.Router = mux.NewRouter()
@@ -30,6 +38,6 @@ func (server *Server) Initialize(driver, user, password, dbname string) {
 }
 
 func (server *Server) Run(addr string) {
-	fmt.Println("Listening to port 8080")
+	logging.Info(logTag, "Listening to port 8080")
 	log.Fatal(http.ListenAndServe(addr, server.Router))
 }
