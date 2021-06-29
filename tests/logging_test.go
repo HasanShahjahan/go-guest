@@ -7,7 +7,7 @@ import (
 )
 
 func TestFormatter(t *testing.T) {
-	assert.Equal(t, utils.GetFormatter("", "go"), "go")
-	assert.Equal(t, utils.GetFormatter("go", "ground"), "go : ground")
-	assert.Equal(t, utils.GetFormatter("go", "%v"), "go : %v")
+	assert.Equal(t, logging.GetFormatter("", "go"), "go")
+	assert.Equal(t, logging.GetFormatter("go", "ground"), "go : ground")
+	assert.Equal(t, logging.GetFormatter("go", "%v"), "go : %v")
 }
