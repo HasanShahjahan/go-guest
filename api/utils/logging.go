@@ -73,7 +73,7 @@ func Info(tag string, format string, args ...interface{}) {
 		return
 	}
 
-	formatter := getFormatter(tag, format)
+	formatter := GetFormatter(tag, format)
 	DefaultLogger.WithFields(addFileParams(nil)).Info(spewConfig.Sprintf(formatter, args...))
 }
 
@@ -83,7 +83,7 @@ func InfoWithParams(tag string, params map[string]interface{}, format string, ar
 		return
 	}
 
-	formatter := getFormatter(tag, format)
+	formatter := GetFormatter(tag, format)
 	DefaultLogger.WithFields(addFileParams(params)).Info(spewConfig.Sprintf(formatter, args...))
 }
 
@@ -93,7 +93,7 @@ func Warn(tag string, format string, args ...interface{}) {
 		return
 	}
 
-	formatter := getFormatter(tag, format)
+	formatter := GetFormatter(tag, format)
 	DefaultLogger.WithFields(addFileParams(nil)).Warn(spewConfig.Sprintf(formatter, args...))
 }
 
@@ -103,7 +103,7 @@ func WarnWithParams(tag string, params map[string]interface{}, format string, ar
 		return
 	}
 
-	formatter := getFormatter(tag, format)
+	formatter := GetFormatter(tag, format)
 	DefaultLogger.WithFields(addFileParams(params)).Warn(spewConfig.Sprintf(formatter, args...))
 }
 
@@ -113,7 +113,7 @@ func Debug(tag string, format string, args ...interface{}) {
 		return
 	}
 
-	formatter := getFormatter(tag, format)
+	formatter := GetFormatter(tag, format)
 	DefaultLogger.WithFields(addFileParams(nil)).Debug(spewConfig.Sprintf(formatter, args...))
 }
 
@@ -123,7 +123,7 @@ func DebugWithParams(tag string, params map[string]interface{}, format string, a
 		return
 	}
 
-	formatter := getFormatter(tag, format)
+	formatter := GetFormatter(tag, format)
 	DefaultLogger.WithFields(addFileParams(params)).Debug(spewConfig.Sprintf(formatter, args...))
 }
 
@@ -140,7 +140,7 @@ func Error(tag string, format string, args ...interface{}) {
 		}
 	}
 
-	formatter := getFormatter(tag, format)
+	formatter := GetFormatter(tag, format)
 	DefaultLogger.WithFields(addFileParams(nil)).Error(spewConfig.Sprintf(formatter, args...))
 }
 
@@ -157,7 +157,7 @@ func ErrorWithParams(tag string, params map[string]interface{}, format string, a
 		}
 	}
 
-	formatter := getFormatter(tag, format)
+	formatter := GetFormatter(tag, format)
 	DefaultLogger.WithFields(addFileParams(params)).Error(spewConfig.Sprintf(formatter, args...))
 }
 
@@ -189,7 +189,7 @@ func Fatal(tag string, format string, args ...interface{}) {
 
 	argList := getArgListWithTrace(args)
 	format += "%v"
-	formatter := getFormatter(tag, format)
+	formatter := GetFormatter(tag, format)
 	DefaultLogger.WithFields(addFileParams(nil)).Fatal(spewConfig.Sprintf(formatter, argList...))
 }
 
@@ -201,11 +201,11 @@ func FatalWithParams(tag string, params map[string]interface{}, format string, a
 
 	argList := getArgListWithTrace(args)
 	format += "%v"
-	formatter := getFormatter(tag, format)
+	formatter := GetFormatter(tag, format)
 	DefaultLogger.WithFields(addFileParams(params)).Fatal(spewConfig.Sprintf(formatter, argList...))
 }
 
-func getFormatter(tag string, format string) string {
+func GetFormatter(tag string, format string) string {
 	formatter := fmt.Sprintf("%s : ", tag)
 	formatter = strings.TrimPrefix(formatter, " : ")
 	formatter += format
