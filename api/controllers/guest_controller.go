@@ -4,8 +4,10 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"github.com/HasanShahjahan/go-guest/api/helpers"
+	"github.com/HasanShahjahan/go-guest/api/models"
 	"github.com/HasanShahjahan/go-guest/api/responses"
-	logging "github.com/HasanShahjahan/go-guest/api/utils"
+	"github.com/HasanShahjahan/go-guest/api/utils"
 	"github.com/gorilla/mux"
 	"net/http"
 	"time"
@@ -54,8 +56,7 @@ func (server *Server) GetGuestLists(w http.ResponseWriter, r *http.Request) {
 }
 
 func (server *Server) CreateGuest(w http.ResponseWriter, r *http.Request) {
-	var g guest
-	var ac accommodation
+	//Get guest name from route
 	vars := mux.Vars(r)
 	name := vars["name"]
 	if name == "" {
@@ -64,22 +65,23 @@ func (server *Server) CreateGuest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	g = guest{Name: name, Status: Upcoming}
+	//Process request body
+	guest := guest{Name: name, Status: Upcoming}
 	decoder := json.NewDecoder(r.Body)
-	if err := decoder.Decode(&g); err != nil {
-		responses.RespondWithError(w, http.StatusBadRequest, "Invalid request payload")
-		logging.Error(logTag, "Error during decode request payload", err)
+	if err := decoder.Decode(&guest); err != nil {
+		responses.RespondWithError(w, http.StatusUnprocessableEntity, err.Error())
 		return
 	}
 	defer r.Body.Close()
+	logging.Info(logTag, "[Create Guest][Request]=%v", guest)
 
-	logging.Info(logTag, "[Create Guest][Request]=%v", g)
-	ac = accommodation{TableNo: g.Table}
-	if err := ac.getAccommodationByTableNo(server.DB); err != nil {
+	//Get accommodation by table no
+	accommodation := accommodation{TableNo: guest.Table}
+	if err := accommodation.getAccommodationByTableNo(server.DB); err != nil {
 		switch err {
 		case sql.ErrNoRows:
 			responses.RespondWithError(w, http.StatusNotFound, "Table is not found")
-			logging.Error(logTag, "Invalid Table number, table=%d, error=%v", g.Table, err)
+			logging.Error(logTag, "Invalid Table number, table=%d, error=%v", guest.Table, err)
 		default:
 			responses.RespondWithError(w, http.StatusInternalServerError, err.Error())
 			logging.Error(logTag, "Error during get accommodation information, error=%v", err)
@@ -87,22 +89,26 @@ func (server *Server) CreateGuest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//Accompany guests and person itself
-	if g.AccompanyingGuests+1 > ac.AvailableSeat-ac.BookedSeat {
+	//Calculate table space by accompany guests and person itself
+	if guest.AccompanyingGuests+1 > accommodation.AvailableSeat-accommodation.BookedSeat {
 		responses.RespondWithError(w, http.StatusUnprocessableEntity, "Insufficient space at the specified table")
-		logging.Warn(logTag, "Insufficient space at the specified table, table=%d, error=%v", g.Table)
+		logging.Warn(logTag, "Insufficient space at the specified table, table=%d, error=%v", guest.Table)
 		return
 	}
 
-	g.Table = ac.ID
-	ac.BookedSeat = ac.BookedSeat + g.AccompanyingGuests + 1
-	if err := g.createGuest(server.DB, ac.BookedSeat); err != nil {
+	//Object preparation
+	guest.Table = accommodation.ID
+	accommodation.BookedSeat = accommodation.BookedSeat + guest.AccompanyingGuests + 1
+
+	//Create guest and update accommodation
+	if err := guest.createGuest(server.DB, accommodation.BookedSeat); err != nil {
 		responses.RespondWithError(w, http.StatusInternalServerError, err.Error())
 		logging.Error(logTag, "Guest creation is failed, error=%v", err)
 		return
 	}
-	responses.RespondWithJSON(w, http.StatusCreated, g)
-	logging.Info(logTag, "[Create Guest][Response]=%v", g)
+	responses.RespondWithJSON(w, http.StatusCreated, helpers.GuestDtoFromEntity(models.Guest(guest)))
+
+	logging.Info(logTag, "[Create Guest][Response]=%v", guest)
 }
 
 func (server *Server) UpdateGuest(w http.ResponseWriter, r *http.Request) {
