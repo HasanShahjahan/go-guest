@@ -149,11 +149,17 @@ func ensureTableExists() {
 	}
 }
 
-func clearTable() {
-	if _, err := a.DB.Exec("DROP TABLE guest"); err != nil {
+func createDatabase() {
+	if _, err := a.DB.Exec("CREATE DATABASE IF NOT EXISTS guests"); err != nil {
 		log.Fatal(err)
 	}
-	if _, err := a.DB.Exec("DROP TABLE accommodation"); err != nil {
+}
+
+func clearTable() {
+	if _, err := a.DB.Exec("DROP TABLE IF EXISTS guests.guest"); err != nil {
+		log.Fatal(err)
+	}
+	if _, err := a.DB.Exec("DROP TABLE IF EXISTS guests.accommodation"); err != nil {
 		log.Fatal(err)
 	}
 }
@@ -164,7 +170,7 @@ func setupSeedData() {
 	}
 }
 
-const guestTableCreationQuery = `CREATE TABLE IF NOT EXISTS guest
+const guestTableCreationQuery = `CREATE TABLE IF NOT EXISTS guests.guest
 (
 	id                     int(11)                                 NOT NULL     AUTO_INCREMENT,
 	name                   varchar(256) COLLATE utf8mb4_unicode_ci NOT NULL,
@@ -179,7 +185,7 @@ const guestTableCreationQuery = `CREATE TABLE IF NOT EXISTS guest
 	PRIMARY KEY (id)
 )`
 
-const accommodationTableCreationQuery = `CREATE TABLE IF NOT EXISTS accommodation 
+const accommodationTableCreationQuery = `CREATE TABLE IF NOT EXISTS guests.accommodation 
 (
 	id                     int(11)    NOT NULL    AUTO_INCREMENT,
     table_no               int(11)    NOT NULL,
@@ -188,11 +194,11 @@ const accommodationTableCreationQuery = `CREATE TABLE IF NOT EXISTS accommodatio
 	PRIMARY KEY (id)
 )`
 
-const insertAccommodation = `INSERT INTO accommodation(table_no, available_seat, booked_seat) VALUES (1001,15,0), (1002,20,0), (1003,30,0);`
+const insertAccommodation = `INSERT INTO guests.accommodation(table_no, available_seat, booked_seat) VALUES (1001,15,0), (1002,20,0), (1003,30,0);`
 
-const insertGuest = `INSERT INTO guest(name, table_id, accompanying_guests, status) VALUES ('Hasan',1, 5, 'Upcoming');`
+const insertGuest = `INSERT INTO guests.guest(name, table_id, accompanying_guests, status) VALUES ('Hasan',1, 5, 'Upcoming');`
 
-const updateAcc = `UPDATE accommodation SET booked_seat=6 WHERE table_no=1001;`
+const updateAcc = `UPDATE guests.accommodation SET booked_seat=6 WHERE table_no=1001;`
 
 func executeRequest(req *http.Request) *httptest.ResponseRecorder {
 	rr := httptest.NewRecorder()

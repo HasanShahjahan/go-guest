@@ -8,17 +8,23 @@ import (
 
 func Load(db *sql.DB) {
 	fmt.Println("Loading seed data...")
+	createDatabase(db)
 	clearTable(db)
 	ensureTableExists(db)
 	setupSeedData(db)
 	fmt.Println("Loading seed data is successful.")
 }
 
-func clearTable(db *sql.DB) {
-	if _, err := db.Exec("DROP TABLE guest"); err != nil {
+func createDatabase(db *sql.DB) {
+	if _, err := db.Exec("CREATE DATABASE IF NOT EXISTS guests;"); err != nil {
 		log.Fatal(err)
 	}
-	if _, err := db.Exec("DROP TABLE accommodation"); err != nil {
+}
+func clearTable(db *sql.DB) {
+	if _, err := db.Exec("DROP TABLE IF EXISTS guests.guest"); err != nil {
+		log.Fatal(err)
+	}
+	if _, err := db.Exec("DROP TABLE IF EXISTS guests.accommodation"); err != nil {
 		log.Fatal(err)
 	}
 }
@@ -39,7 +45,7 @@ func setupSeedData(db *sql.DB) {
 	}
 }
 
-const guestTableCreationQuery = `CREATE TABLE IF NOT EXISTS guest
+const guestTableCreationQuery = `CREATE TABLE IF NOT EXISTS guests.guest
 (
 	id                     int(11)                                 NOT NULL     AUTO_INCREMENT,
 	name                   varchar(256) COLLATE utf8mb4_unicode_ci NOT NULL,
@@ -54,7 +60,7 @@ const guestTableCreationQuery = `CREATE TABLE IF NOT EXISTS guest
 	PRIMARY KEY (id)
 )`
 
-const accommodationTableCreationQuery = `CREATE TABLE IF NOT EXISTS accommodation 
+const accommodationTableCreationQuery = `CREATE TABLE IF NOT EXISTS guests.accommodation 
 (
 	id                     int(11)    NOT NULL    AUTO_INCREMENT,
     table_no               int(11)    NOT NULL,
@@ -63,4 +69,4 @@ const accommodationTableCreationQuery = `CREATE TABLE IF NOT EXISTS accommodatio
 	PRIMARY KEY (id)
 )`
 
-const insertAccommodation = `INSERT INTO accommodation(table_no, available_seat, booked_seat) VALUES (1001,15,0), (1002,20,0), (1003,30,0);`
+const insertAccommodation = `INSERT INTO guests.accommodation(table_no, available_seat, booked_seat) VALUES (1001,15,0), (1002,20,0), (1003,30,0);`
