@@ -27,6 +27,23 @@ func TestEmptyTable(t *testing.T) {
 	}
 }
 
+func TestGetGuestList(t *testing.T) {
+	a.Initialize(os.Getenv("TEST_DB_DRIVER"), os.Getenv("TEST_DB_USERNAME"), os.Getenv("TEST_DB_PASSWORD"), os.Getenv("TEST_DB_NAME"))
+	clearTable()
+	ensureTableExists()
+	setupSeedData()
+	addGuest()
+	updateAccommodation()
+
+	req, _ := http.NewRequest("GET", "/guest_list", nil)
+	response := executeRequest(req)
+
+	checkResponseCode(t, http.StatusOK, response.Code)
+	if body := response.Body.String(); body != "{}" {
+		t.Errorf("Expected object of array list. Got %s", body)
+	}
+}
+
 func TestCreateGuest(t *testing.T) {
 	a.Initialize(os.Getenv("TEST_DB_DRIVER"), os.Getenv("TEST_DB_USERNAME"), os.Getenv("TEST_DB_PASSWORD"), os.Getenv("TEST_DB_NAME"))
 	clearTable()
