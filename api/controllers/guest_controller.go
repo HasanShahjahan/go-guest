@@ -194,6 +194,7 @@ func (server *Server) UpdateGuest(w http.ResponseWriter, r *http.Request) {
 }
 
 func (server *Server) DeleteGuest(w http.ResponseWriter, r *http.Request) {
+	//Get guest name from route
 	vars := mux.Vars(r)
 	name := vars["name"]
 	if name == "" {
@@ -202,8 +203,9 @@ func (server *Server) DeleteGuest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var g guest
-	g = guest{Name: name}
+	//Process request body
+	g := guest{Name: name}
+	logging.Info(logTag, "[Delete Guest][Request]=%v", g)
 	if err := g.getGuest(server.DB); err != nil {
 		switch err {
 		case sql.ErrNoRows:
@@ -216,9 +218,9 @@ func (server *Server) DeleteGuest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var ac accommodation
-	ac = accommodation{TableNo: g.Table}
-	if err := ac.getAccommodationByTableId(server.DB); err != nil {
+	//Get accommodation by table no whether table is found or not
+	accommodation := accommodation{TableNo: g.Table}
+	if err := accommodation.getAccommodationByTableId(server.DB); err != nil {
 		switch err {
 		case sql.ErrNoRows:
 			responses.RespondWithError(w, http.StatusNotFound, "Table is not found")
@@ -230,15 +232,19 @@ func (server *Server) DeleteGuest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ac.BookedSeat = ac.BookedSeat - (g.AccompanyingGuests + 1)
+	//Prepare delete object by setting status Archived
+	accommodation.BookedSeat = accommodation.BookedSeat - (g.AccompanyingGuests + 1)
 	g.Status = Archived
-	if err := g.deleteGuest(server.DB, ac.BookedSeat); err != nil {
+
+	//Delete guest and update accommodation table
+	if err := g.deleteGuest(server.DB, accommodation.BookedSeat); err != nil {
 		responses.RespondWithError(w, http.StatusInternalServerError, err.Error())
 		logging.Error(logTag, "Guest delete is failed ,error=%v", err)
 		return
 	}
 
 	responses.RespondWithJSON(w, http.StatusOK, map[string]string{"result": "success"})
+	logging.Info(logTag, "[Update Guest][Request]=%v", map[string]string{"result": "success"})
 }
 
 func (server *Server) GetArrivedGuests(w http.ResponseWriter, r *http.Request) {
