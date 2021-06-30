@@ -4,8 +4,10 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"github.com/HasanShahjahan/go-guest/api/helpers"
+	"github.com/HasanShahjahan/go-guest/api/models"
 	"github.com/HasanShahjahan/go-guest/api/responses"
-	logging "github.com/HasanShahjahan/go-guest/api/utils"
+	"github.com/HasanShahjahan/go-guest/api/utils"
 	"github.com/gorilla/mux"
 	"net/http"
 	"time"
@@ -54,8 +56,7 @@ func (server *Server) GetGuestLists(w http.ResponseWriter, r *http.Request) {
 }
 
 func (server *Server) CreateGuest(w http.ResponseWriter, r *http.Request) {
-	var g guest
-	var ac accommodation
+	//Get guest name from route
 	vars := mux.Vars(r)
 	name := vars["name"]
 	if name == "" {
@@ -64,22 +65,23 @@ func (server *Server) CreateGuest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	g = guest{Name: name, Status: Upcoming}
+	//Process request body
+	guest := guest{Name: name, Status: Upcoming}
 	decoder := json.NewDecoder(r.Body)
-	if err := decoder.Decode(&g); err != nil {
-		responses.RespondWithError(w, http.StatusBadRequest, "Invalid request payload")
-		logging.Error(logTag, "Error during decode request payload", err)
+	if err := decoder.Decode(&guest); err != nil {
+		responses.RespondWithError(w, http.StatusUnprocessableEntity, err.Error())
 		return
 	}
 	defer r.Body.Close()
+	logging.Info(logTag, "[Create Guest][Request]=%v", guest)
 
-	logging.Info(logTag, "[Create Guest][Request]=%v", g)
-	ac = accommodation{TableNo: g.Table}
-	if err := ac.getAccommodationByTableNo(server.DB); err != nil {
+	//Get accommodation by table no
+	accommodation := accommodation{TableNo: guest.Table}
+	if err := accommodation.getAccommodationByTableNo(server.DB); err != nil {
 		switch err {
 		case sql.ErrNoRows:
 			responses.RespondWithError(w, http.StatusNotFound, "Table is not found")
-			logging.Error(logTag, "Invalid Table number, table=%d, error=%v", g.Table, err)
+			logging.Error(logTag, "Invalid Table number, table=%d, error=%v", guest.Table, err)
 		default:
 			responses.RespondWithError(w, http.StatusInternalServerError, err.Error())
 			logging.Error(logTag, "Error during get accommodation information, error=%v", err)
@@ -87,26 +89,31 @@ func (server *Server) CreateGuest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//Accompany guests and person itself
-	if g.AccompanyingGuests+1 > ac.AvailableSeat-ac.BookedSeat {
+	//Calculate table space by accompany guests and person itself
+	if guest.AccompanyingGuests+1 > accommodation.AvailableSeat-accommodation.BookedSeat {
 		responses.RespondWithError(w, http.StatusUnprocessableEntity, "Insufficient space at the specified table")
-		logging.Warn(logTag, "Insufficient space at the specified table, table=%d, error=%v", g.Table)
+		logging.Warn(logTag, "Insufficient space at the specified table, table=%d, error=%v", guest.Table)
 		return
 	}
 
-	g.Table = ac.ID
-	ac.BookedSeat = ac.BookedSeat + g.AccompanyingGuests + 1
-	if err := g.createGuest(server.DB, ac.BookedSeat); err != nil {
+	//Object preparation
+	guest.Table = accommodation.ID
+	accommodation.BookedSeat = accommodation.BookedSeat + guest.AccompanyingGuests + 1
+
+	//Create guest and update accommodation
+	if err := guest.createGuest(server.DB, accommodation.BookedSeat); err != nil {
 		responses.RespondWithError(w, http.StatusInternalServerError, err.Error())
 		logging.Error(logTag, "Guest creation is failed, error=%v", err)
 		return
 	}
-	responses.RespondWithJSON(w, http.StatusCreated, g)
-	logging.Info(logTag, "[Create Guest][Response]=%v", g)
+
+	mappedResult := helpers.GuestDtoFromEntity(models.Guest(guest))
+	responses.RespondWithJSON(w, http.StatusCreated, mappedResult)
+	logging.Info(logTag, "[Create Guest][Response]=%v", mappedResult)
 }
 
 func (server *Server) UpdateGuest(w http.ResponseWriter, r *http.Request) {
-	var ac accommodation
+	//Get guest name from route
 	vars := mux.Vars(r)
 	name := vars["name"]
 	if name == "" {
@@ -115,8 +122,8 @@ func (server *Server) UpdateGuest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var g guest
-	g = guest{Name: name}
+	//Process request body
+	g := guest{Name: name}
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(&g); err != nil {
 		responses.RespondWithError(w, http.StatusBadRequest, "Invalid request payload")
@@ -124,7 +131,9 @@ func (server *Server) UpdateGuest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer r.Body.Close()
+	logging.Info(logTag, "[Update Guest][Request]=%v", g)
 
+	//Get guest from database to check whether it exists or not
 	var databaseInfo guest
 	databaseInfo = guest{Name: name}
 	if err := databaseInfo.getGuest(server.DB); err != nil {
@@ -139,44 +148,53 @@ func (server *Server) UpdateGuest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ac = accommodation{TableNo: databaseInfo.Table}
-	if err := ac.getAccommodationByTableId(server.DB); err != nil {
+	//Get accommodation by table no and return if table no is not found.
+	accommodation := accommodation{TableNo: databaseInfo.Table}
+	if err := accommodation.getAccommodationByTableId(server.DB); err != nil {
 		switch err {
 		case sql.ErrNoRows:
 			responses.RespondWithError(w, http.StatusNotFound, "Table is not found")
-			logging.Error(logTag, "Table is not found, table=%d, error=%v", ac.TableNo, err)
+			logging.Error(logTag, "Table is not found, table=%d, error=%v", accommodation.TableNo, err)
 		default:
 			responses.RespondWithError(w, http.StatusInternalServerError, err.Error())
-			logging.Error(logTag, "Error during get accommodation, table=%d, error=%v", ac.TableNo, err)
+			logging.Error(logTag, "Error during get accommodation, table=%d, error=%v", accommodation.TableNo, err)
 		}
 		return
 	}
 
+	//Update guest object preparation
 	g.Table = databaseInfo.Table
 	g.Status = Attended
 	g.ArrivalTime = time.Now()
 
+	//Calculate previously booked seat newly updated seat
 	if g.AccompanyingGuests > databaseInfo.AccompanyingGuests {
-		ac.BookedSeat = ac.BookedSeat + (g.AccompanyingGuests - databaseInfo.AccompanyingGuests)
+		accommodation.BookedSeat = accommodation.BookedSeat + (g.AccompanyingGuests - databaseInfo.AccompanyingGuests)
 	} else if g.AccompanyingGuests < databaseInfo.AccompanyingGuests {
-		ac.BookedSeat = ac.BookedSeat - (databaseInfo.AccompanyingGuests - g.AccompanyingGuests)
+		accommodation.BookedSeat = accommodation.BookedSeat - (databaseInfo.AccompanyingGuests - g.AccompanyingGuests)
 	}
 
-	if ac.AvailableSeat < ac.BookedSeat {
+	//Check table space at the specified table
+	if accommodation.AvailableSeat < accommodation.BookedSeat {
 		responses.RespondWithError(w, http.StatusUnprocessableEntity, "Insufficient space at the specified table")
 		logging.Warn(logTag, "Insufficient space at the specified table")
 		return
 	}
 
-	if err := g.updateGuest(server.DB, ac.BookedSeat); err != nil {
+	//Update guest and accommodation table
+	if err := g.updateGuest(server.DB, accommodation.BookedSeat); err != nil {
 		responses.RespondWithError(w, http.StatusInternalServerError, err.Error())
 		logging.Error(logTag, "Guest update is failed ,error=%v", err)
 		return
 	}
-	responses.RespondWithJSON(w, http.StatusOK, g)
+
+	mappedResult := helpers.GuestDtoFromEntity(models.Guest(g))
+	responses.RespondWithJSON(w, http.StatusOK, mappedResult)
+	logging.Info(logTag, "[Update Guest][Response]=%v", mappedResult)
 }
 
 func (server *Server) DeleteGuest(w http.ResponseWriter, r *http.Request) {
+	//Get guest name from route
 	vars := mux.Vars(r)
 	name := vars["name"]
 	if name == "" {
@@ -185,8 +203,9 @@ func (server *Server) DeleteGuest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var g guest
-	g = guest{Name: name}
+	//Process request body
+	g := guest{Name: name}
+	logging.Info(logTag, "[Delete Guest][Request]=%v", g)
 	if err := g.getGuest(server.DB); err != nil {
 		switch err {
 		case sql.ErrNoRows:
@@ -199,9 +218,9 @@ func (server *Server) DeleteGuest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var ac accommodation
-	ac = accommodation{TableNo: g.Table}
-	if err := ac.getAccommodationByTableId(server.DB); err != nil {
+	//Get accommodation by table no whether table is found or not
+	accommodation := accommodation{TableNo: g.Table}
+	if err := accommodation.getAccommodationByTableId(server.DB); err != nil {
 		switch err {
 		case sql.ErrNoRows:
 			responses.RespondWithError(w, http.StatusNotFound, "Table is not found")
@@ -213,15 +232,19 @@ func (server *Server) DeleteGuest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ac.BookedSeat = ac.BookedSeat - (g.AccompanyingGuests + 1)
+	//Prepare delete object by setting status Archived
+	accommodation.BookedSeat = accommodation.BookedSeat - (g.AccompanyingGuests + 1)
 	g.Status = Archived
-	if err := g.deleteGuest(server.DB, ac.BookedSeat); err != nil {
+
+	//Delete guest and update accommodation table
+	if err := g.deleteGuest(server.DB, accommodation.BookedSeat); err != nil {
 		responses.RespondWithError(w, http.StatusInternalServerError, err.Error())
 		logging.Error(logTag, "Guest delete is failed ,error=%v", err)
 		return
 	}
 
 	responses.RespondWithJSON(w, http.StatusOK, map[string]string{"result": "success"})
+	logging.Info(logTag, "[Update Guest][Request]=%v", map[string]string{"result": "success"})
 }
 
 func (server *Server) GetArrivedGuests(w http.ResponseWriter, r *http.Request) {
@@ -233,7 +256,6 @@ func (server *Server) GetArrivedGuests(w http.ResponseWriter, r *http.Request) {
 		logging.Error(logTag, "Error during get arrived guests ,error=%v", err)
 		return
 	}
-
 	responses.RespondWithJSON(w, http.StatusOK, guestLists)
 }
 
@@ -287,7 +309,9 @@ func (a *guest) getGuests(db *sql.DB) (*guestlist, error) {
 			logging.Error(logTag, "DB: Error during mapping of data  ,error=%v", err)
 			return nil, err
 		}
+		fmt.Println(p)
 		guests = append(guests, p)
+
 	}
 
 	return &guestlist{guests: guests}, nil
