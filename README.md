@@ -1,6 +1,6 @@
-# GoGround: Open Platform
+# GoGuest: Open Platform
 
-This is the repository houses of monolithic flat architecture that make up GoGroud's guest list API.
+This is the repository houses of monolithic flat architecture that make up GetGroud's guest list API.
 
 ## Things you need
 
