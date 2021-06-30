@@ -1,8 +1,10 @@
 package api
 
 import (
+	"fmt"
 	"github.com/HasanShahjahan/go-guest/api/utils"
 	"os"
+	"runtime/debug"
 
 	"github.com/HasanShahjahan/go-guest/api/controllers"
 	"github.com/HasanShahjahan/go-guest/api/seed"
@@ -30,4 +32,13 @@ func Run() {
 	seed.Load(server.DB)
 	server.Run(":8080")
 
+}
+
+func DoAPIPanicRecovery() {
+	if r := recover(); r != nil {
+		logMessage := fmt.Sprintf("API failed with error %s %s",
+			r, string(debug.Stack()),
+		)
+		logging.Fatal(logTag, logMessage)
+	}
 }

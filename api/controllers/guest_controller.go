@@ -256,7 +256,6 @@ func (server *Server) GetArrivedGuests(w http.ResponseWriter, r *http.Request) {
 		logging.Error(logTag, "Error during get arrived guests ,error=%v", err)
 		return
 	}
-
 	responses.RespondWithJSON(w, http.StatusOK, guestLists)
 }
 
@@ -310,7 +309,9 @@ func (a *guest) getGuests(db *sql.DB) (*guestlist, error) {
 			logging.Error(logTag, "DB: Error during mapping of data  ,error=%v", err)
 			return nil, err
 		}
+		fmt.Println(p)
 		guests = append(guests, p)
+
 	}
 
 	return &guestlist{guests: guests}, nil

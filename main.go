@@ -6,4 +6,5 @@ import (
 
 func main() {
 	api.Run()
+	defer api.DoAPIPanicRecovery()
 }

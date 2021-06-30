@@ -5,7 +5,6 @@ import (
 	"github.com/HasanShahjahan/go-guest/api/utils"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/gorilla/mux"
-	"log"
 	"net/http"
 )
 
@@ -39,5 +38,8 @@ func (server *Server) Initialize(driver, user, password, dbname string) {
 
 func (server *Server) Run(addr string) {
 	logging.Info(logTag, "Listening to port 8080")
-	log.Fatal(http.ListenAndServe(addr, server.Router))
+	err := http.ListenAndServe(addr, server.Router)
+	if err != nil {
+		logging.Fatal(logTag, "ListenAndServe: ", err)
+	}
 }
