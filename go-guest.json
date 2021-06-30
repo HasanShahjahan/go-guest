@@ -1,0 +1,5 @@
+{
+  "logLevel": "DEBUG",
+  "ApiSecret":  "It should be a strong key",
+  "IsJwtEnabled": false
+}
