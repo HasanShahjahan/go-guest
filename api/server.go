@@ -24,11 +24,10 @@ func Run() {
 		logging.Fatal(logTag, "unable to load configuration. error=%v", err)
 	}
 	logging.Info(logTag, "configuration file loaded")
+
 	logging.SetLogLevel(config.Config.LogLevel)
 
-	fmt.Println(config.Config.LogLevel)
-	var err error
-	err = godotenv.Load()
+	err := godotenv.Load()
 	if err != nil {
 		logging.Error(logTag, "Error getting env, not coming through %v", err)
 	} else {
@@ -38,8 +37,6 @@ func Run() {
 	server.Initialize(os.Getenv("DB_DRIVER"), os.Getenv("DB_USERNAME"), os.Getenv("DB_PASSWORD"), os.Getenv("DB_NAME"))
 	seed.Load(server.DB)
 	server.Run(":8080")
-	logging.Debug(logTag, "Hasan"+config.Config.LogLevel)
-
 }
 
 func DoAPIPanicRecovery() {

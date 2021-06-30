@@ -10,7 +10,9 @@ import (
 )
 
 var Config = &struct {
-	LogLevel string `json:"logLevel"`
+	LogLevel     string `json:"logLevel"`
+	ApiSecret    string `json:"ApiSecret"`
+	IsJwtEnabled bool   `json:"IsJwtEnabled"`
 }{}
 
 const (
