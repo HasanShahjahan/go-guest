@@ -2,6 +2,7 @@ package api
 
 import (
 	"fmt"
+	"github.com/HasanShahjahan/go-guest/api/config"
 	"github.com/HasanShahjahan/go-guest/api/utils"
 	"os"
 	"runtime/debug"
@@ -19,7 +20,13 @@ const (
 var server = controllers.Server{}
 
 func Run() {
+	if err := config.LoadJSONConfig(config.Config); err != nil {
+		logging.Fatal(logTag, "unable to load configuration. error=%v", err)
+	}
+	logging.Info(logTag, "configuration file loaded")
+	logging.SetLogLevel(config.Config.LogLevel)
 
+	fmt.Println(config.Config.LogLevel)
 	var err error
 	err = godotenv.Load()
 	if err != nil {
@@ -31,6 +38,7 @@ func Run() {
 	server.Initialize(os.Getenv("DB_DRIVER"), os.Getenv("DB_USERNAME"), os.Getenv("DB_PASSWORD"), os.Getenv("DB_NAME"))
 	seed.Load(server.DB)
 	server.Run(":8080")
+	logging.Debug(logTag, "Hasan"+config.Config.LogLevel)
 
 }
 

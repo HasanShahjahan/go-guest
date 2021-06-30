@@ -42,7 +42,7 @@ func ensureTableExists(db *sql.DB) {
 		log.Fatal(err)
 		logging.Error(logTag, "Error during Accomodation table creation", err)
 	}
-	logging.Info(logTag, "Guest table is created.")
+	logging.Info(logTag, "Accomodation table is created.")
 
 	if _, err := db.Exec(guestTableCreationQuery); err != nil {
 		log.Fatal(err)
