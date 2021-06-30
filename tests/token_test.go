@@ -40,6 +40,6 @@ func TestVerifyToken(t *testing.T) {
 
 	error := auth.TokenValid(req)
 	if error != nil {
-		logging.Error(logTag, "Create JWT token is failed", err)
+		logging.Error(logTag, "Token verification is failed", err)
 	}
 }
